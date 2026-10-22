@@ -1,0 +1,84 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": null
+    },
+    "exported_at": "2026-06-08T00:00:00+00:00",
+    "name": "GitHub Actions Runner",
+    "author": "hey@vudira.com",
+    "description": "Self-hosted GitHub Actions runner using GitHub's official actions-runner image (ghcr.io/actions/actions-runner:latest). The install script copies the runner bundled at /home/runner inside the image into /mnt/server/actions-runner, registers it against REPO_URL with REG_TOKEN, and chowns the directory to UID 988 so the runtime container (which Pterodactyl runs as the \"container\" user) can launch it.",
+    "features": [
+        "eula"
+    ],
+    "docker_images": {
+        "actions_runner_latest": "ghcr.io\/actions\/actions-runner:latest"
+    },
+    "file_denylist": [],
+    "startup": "cd \/home\/container\/actions-runner && exec .\/run.sh",
+    "config": {
+        "files": "{}",
+        "startup": "{\r\n    \"done\": \"Listening for Jobs\"\r\n}",
+        "logs": "{}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!\/bin\/bash\r\nset -euo pipefail\r\n\r\necho '[install] Using the official GitHub actions-runner image.'\r\n\r\n# Clean any stale install from a previous server lifetime.\r\nrm -rf \/mnt\/server\/actions-runner\r\nmkdir -p \/mnt\/server\/actions-runner\r\n\r\n# The official image ships the runner pre-extracted at \/home\/runner. Because the\r\n# install container is built from that same image, we can copy it straight into\r\n# the persistent volume instead of downloading a fresh tarball.\r\nif [ -d \/home\/runner ] && [ -f \/home\/runner\/config.sh ]; then\r\n    echo '[install] Copying bundled runner from \/home\/runner to \/mnt\/server\/actions-runner'\r\n    cp -a \/home\/runner\/. \/mnt\/server\/actions-runner\/\r\nelse\r\n    echo '[install] Bundled runner not found at \/home\/runner - downloading v2.329.0 instead'\r\n    cd \/mnt\/server\/actions-runner\r\n    curl -fsSL -o actions-runner.tar.gz https:\/\/github.com\/actions\/runner\/releases\/download\/v2.329.0\/actions-runner-linux-x64-2.329.0.tar.gz\r\n    echo '194f1e1e4bd02f80b7e9633fc546084d8d4e19f3928a324d512ea53430102e1d  actions-runner.tar.gz' | sha256sum -c -\r\n    tar -xzf actions-runner.tar.gz\r\n    rm -f actions-runner.tar.gz\r\nfi\r\n\r\ncd \/mnt\/server\/actions-runner\r\n\r\nFLAGS=(--unattended --url \"$REPO_URL\" --token \"$REG_TOKEN\" --work _work --replace)\r\n[ -n \"${RUNNER_NAME:-}\" ]   && FLAGS+=(--name \"$RUNNER_NAME\")\r\n[ -n \"${RUNNER_LABELS:-}\" ] && FLAGS+=(--labels \"$RUNNER_LABELS\")\r\n[ -n \"${RUNNER_GROUP:-}\" ]  && FLAGS+=(--runnergroup \"$RUNNER_GROUP\")\r\n\r\necho '[install] Registering runner via config.sh'\r\n.\/config.sh \"${FLAGS[@]}\"\r\n\r\n# Pterodactyl runs the runtime container as UID 988 (\"container\"), but the\r\n# bundled runner files are owned by UID 1001 (\"runner\"). Re-own everything so\r\n# run.sh can write to _diag, _work, .credentials, etc. at runtime.\r\necho '[install] Re-owning runner directory to UID 988 for the Pterodactyl container user'\r\nchown -R 988:988 \/mnt\/server\/actions-runner\r\n\r\necho '[install] Configuration complete. Startup will execute: cd \/home\/container\/actions-runner && .\/run.sh'",
+            "container": "ghcr.io\/actions\/actions-runner:latest",
+            "entrypoint": "\/bin\/bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Repository URL",
+            "description": "GitHub repository or organization URL the runner should attach to (e.g. https:\/\/github.com\/owner\/repo or https:\/\/github.com\/my-org).",
+            "env_variable": "REPO_URL",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Registration Token",
+            "description": "Ephemeral registration token from GitHub (Settings > Actions > Runners > New self-hosted runner). Tokens expire after ~1 hour and are only used during initial registration.",
+            "env_variable": "REG_TOKEN",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Runner Name",
+            "description": "Optional explicit runner name shown in the GitHub UI. Leave blank to auto-generate.",
+            "env_variable": "RUNNER_NAME",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Runner Labels",
+            "description": "Optional comma-separated extra labels for the runner (e.g. self-hosted,linux,x64,pterodactyl).",
+            "env_variable": "RUNNER_LABELS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Runner Group",
+            "description": "Optional GitHub runner group name. Leave blank to use the repository's default group.",
+            "env_variable": "RUNNER_GROUP",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        }
+    ]
+}
