@@ -180,13 +180,11 @@ The `latest` image tag can change. For controlled deployments, use a tested imag
 
 ## Maintainer
 
-**This repository is maintained by \[@Wolvarik](https://github.com/Wolvarik), manager of \*\*Vudira Gaming\*\*.**
+This repository is maintained by [@Wolvarik](https://github.com/Wolvarik), Manager of [**Vudira Gaming**](https://vudira.com).
 
-
-
-**For questions, feedback, or support, contact our community at \[hey@vudira.com](mailto:hey@vudira.com) or join our \[Discord server](https://discord.vudira.com).**
+For questions, feedback, or support, contact our community at [hey@vudira.com](mailto:hey@vudira.com) or join our [Discord server](https://discord.vudira.com).
 
 ## License
 
-This project is licensed under the \*\*GNU General Public License v3.0 (GPLv3)\*\*. See the \[LICENSE](./LICENSE) file for the full terms.
+This project is licensed under the **GNU General Public License v3.0 (GPLv3)**. See the [LICENSE](./LICENSE) file for the full terms.
 
